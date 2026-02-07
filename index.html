@@ -1,371 +1,306 @@
-import React, { useState } from 'react';
-import { 
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, 
-  Legend, ResponsiveContainer, ComposedChart, Area, Cell, ReferenceLine,
-  ScatterChart, Scatter, ZAxis, AreaChart as ReAreaChart
-} from 'recharts';
-import { 
-  Coffee, TrendingUp, TrendingDown, AlertCircle, Droplets, Globe, 
-  Activity, Info, Map as MapIcon, Calendar, Leaf, BarChart3, Database,
-  Ship, Zap, Layers, BarChart as LucideBarChart
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coffee Market Intelligence 2026</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React and ReactDOM CDNs (React 18) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- PropTypes is required by Recharts UMD -->
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    <!-- Recharts (Version pinned for stability) -->
+    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Babel for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .recharts-default-tooltip {
+            border-radius: 12px !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1) !important;
+        }
+        /* Fix for potential layout shifts during tab changes */
+        .tab-content {
+            min-height: 450px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <div id="root"></div>
 
-const CoffeeDashboard = () => {
-  // Global Market Dataset: 10-year history + 2030 projections
-  const globalMarketData = [
-    { year: '2016', brazil: 51.4, vietnam: 26.7, worldSupply: 151.2, worldDemand: 153.8, arabicaPrice: 135, robustaPrice: 85, spread: 50, stocks: 38.5, ratio: 25.0 },
-    { year: '2017', brazil: 45.0, vietnam: 27.8, worldSupply: 158.5, worldDemand: 157.1, arabicaPrice: 126, robustaPrice: 90, spread: 36, stocks: 39.9, ratio: 25.3 },
-    { year: '2018', brazil: 61.7, vietnam: 30.5, worldSupply: 170.1, worldDemand: 161.4, arabicaPrice: 101, robustaPrice: 78, spread: 23, stocks: 48.6, ratio: 30.1 },
-    { year: '2019', brazil: 49.3, vietnam: 31.3, worldSupply: 163.5, worldDemand: 165.2, arabicaPrice: 95, robustaPrice: 70, spread: 25, stocks: 46.9, ratio: 28.3 },
-    { year: '2020', brazil: 63.1, vietnam: 29.0, worldSupply: 169.8, worldDemand: 166.3, arabicaPrice: 111, robustaPrice: 72, spread: 39, stocks: 50.4, ratio: 30.3 },
-    { year: '2021', brazil: 47.7, vietnam: 31.6, worldSupply: 167.1, worldDemand: 170.3, arabicaPrice: 169, robustaPrice: 98, spread: 71, stocks: 47.2, ratio: 27.7 },
-    { year: '2022', brazil: 50.9, vietnam: 27.2, worldSupply: 168.2, worldDemand: 172.5, arabicaPrice: 214, robustaPrice: 105, spread: 109, stocks: 42.9, ratio: 24.8 },
-    { year: '2023', brazil: 55.1, vietnam: 27.5, worldSupply: 171.0, worldDemand: 174.8, arabicaPrice: 175, robustaPrice: 120, spread: 55, stocks: 39.1, ratio: 22.3 },
-    { year: '2024', brazil: 55.4, vietnam: 26.5, worldSupply: 173.2, worldDemand: 177.2, arabicaPrice: 235, robustaPrice: 185, spread: 50, stocks: 35.1, ratio: 19.8 },
-    { year: '2025', brazil: 56.5, vietnam: 24.8, worldSupply: 175.4, worldDemand: 181.5, arabicaPrice: 368, robustaPrice: 245, spread: 123, stocks: 29.0, ratio: 15.9 },
-    { year: '2026', brazil: 66.2, vietnam: 26.0, worldSupply: 184.5, worldDemand: 183.9, arabicaPrice: 310, robustaPrice: 210, spread: 100, stocks: 29.6, ratio: 16.1 },
-    { year: '2030e', brazil: 68.0, vietnam: 30.5, worldSupply: 192.4, worldDemand: 198.8, arabicaPrice: 295, robustaPrice: 205, spread: 90, stocks: 22.1, ratio: 11.1 },
-  ];
+    <script type="text/babel">
+        // Safety check to ensure Recharts is loaded before destructuring
+        const { 
+            LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, 
+            Legend, ResponsiveContainer, ComposedChart, Area, Cell, ReferenceLine, AreaChart
+        } = window.Recharts || {};
 
-  // Detailed Regional Data from CONAB Feb 2026
-  const brazilRegionalStats = [
-    { state: 'Minas Gerais', type: 'Arabica', prod25: 27932, prod26: 34106, yield25: 22.3, yield26: 26.8, treesProd: 1092384, treesForm: 126481, areaProd: 1341.6, areaForm: 121.2 },
-    { state: 'Espírito Santo', type: 'Conilon', prod25: 17448, prod26: 19023, yield25: 45.9, yield26: 47.9, treesProd: 1491960, treesForm: 242999, areaProd: 396.9, areaForm: 57.7 },
-    { state: 'São Paulo', type: 'Arabica', prod25: 4880, prod26: 5214, yield25: 25.1, yield26: 26.4, treesProd: 783763, treesForm: 214538, areaProd: 201.2, areaForm: 35.4 },
-    { state: 'Bahia', type: 'Mixed', prod25: 3504, prod26: 3752, yield25: 24.8, yield26: 26.1, treesProd: 199235, treesForm: 46541, areaProd: 145.8, areaForm: 22.1 },
-    { state: 'Rondônia', type: 'Conilon', prod25: 2355, prod26: 2783, yield25: 56.9, yield26: 63.6, treesProd: 142450, treesForm: 24622, areaProd: 43.1, areaForm: 7.3 },
-  ];
+        const App = () => {
+            const [activeTab, setActiveTab] = React.useState('state-analysis');
 
-  // Supply Flow Pulse (Monthly Liquidity)
-  const supplyPulse = [
-    { month: 'Apr', arabica: 2, conilon: 15, total: 4.9 },
-    { month: 'May', arabica: 10, conilon: 35, total: 26.9 },
-    { month: 'Jun', arabica: 25, conilon: 30, total: 43.1 },
-    { month: 'Jul', arabica: 35, conilon: 15, total: 15.1 },
-    { month: 'Aug', arabica: 20, conilon: 4, total: 6.2 },
-    { month: 'Sep', arabica: 8, conilon: 1, total: 3.8 },
-  ];
+            // --- DATASETS ---
+            const globalMarketData = [
+                { year: '2016', brazil: 51.4, vietnam: 26.7, worldSupply: 151.2, worldDemand: 153.8, arabicaPrice: 135, robustaPrice: 85, spread: 50, stocks: 38.5, ratio: 25.0 },
+                { year: '2017', brazil: 45.0, vietnam: 27.8, worldSupply: 158.5, worldDemand: 157.1, arabicaPrice: 126, robustaPrice: 90, spread: 36, stocks: 39.9, ratio: 25.3 },
+                { year: '2018', brazil: 61.7, vietnam: 30.5, worldSupply: 170.1, worldDemand: 161.4, arabicaPrice: 101, robustaPrice: 78, spread: 23, stocks: 48.6, ratio: 30.1 },
+                { year: '2019', brazil: 49.3, vietnam: 31.3, worldSupply: 163.5, worldDemand: 165.2, arabicaPrice: 95, robustaPrice: 70, spread: 25, stocks: 46.9, ratio: 28.3 },
+                { year: '2020', brazil: 63.1, vietnam: 29.0, worldSupply: 169.8, worldDemand: 166.3, arabicaPrice: 111, robustaPrice: 72, spread: 39, stocks: 50.4, ratio: 30.3 },
+                { year: '2021', brazil: 47.7, vietnam: 31.6, worldSupply: 167.1, worldDemand: 170.3, arabicaPrice: 169, robustaPrice: 98, spread: 71, stocks: 47.2, ratio: 27.7 },
+                { year: '2022', brazil: 50.9, vietnam: 27.2, worldSupply: 168.2, worldDemand: 172.5, arabicaPrice: 214, robustaPrice: 105, spread: 109, stocks: 42.9, ratio: 24.8 },
+                { year: '2023', brazil: 55.1, vietnam: 27.5, worldSupply: 171.0, worldDemand: 174.8, arabicaPrice: 175, robustaPrice: 120, spread: 55, stocks: 39.1, ratio: 22.3 },
+                { year: '2024', brazil: 55.4, vietnam: 26.5, worldSupply: 173.2, worldDemand: 177.2, arabicaPrice: 235, robustaPrice: 185, spread: 50, stocks: 35.1, ratio: 19.8 },
+                { year: '2025', brazil: 56.5, vietnam: 24.8, worldSupply: 175.4, worldDemand: 181.5, arabicaPrice: 368, robustaPrice: 245, spread: 123, stocks: 29.0, ratio: 15.9 },
+                { year: '2026', brazil: 66.2, vietnam: 26.0, worldSupply: 184.5, worldDemand: 183.9, arabicaPrice: 310, robustaPrice: 210, spread: 100, stocks: 29.6, ratio: 16.1 },
+                { year: '2030e', brazil: 68.0, vietnam: 30.5, worldSupply: 192.4, worldDemand: 198.8, arabicaPrice: 295, robustaPrice: 205, spread: 90, stocks: 22.1, ratio: 11.1 },
+            ];
 
-  const [activeTab, setActiveTab] = useState('state-analysis');
+            const brazilRegionalStats = [
+                { state: 'Minas Gerais', type: 'Arabica', prod25: 27932, prod26: 34106, yield25: 22.3, yield26: 26.8, treesProd: 1092384, treesForm: 126481 },
+                { state: 'Espírito Santo', type: 'Conilon', prod25: 17448, prod26: 19023, yield25: 45.9, yield26: 47.9, treesProd: 1491960, treesForm: 242999 },
+                { state: 'São Paulo', type: 'Arabica', prod25: 4880, prod26: 5214, yield25: 25.1, yield26: 26.4, treesProd: 783763, treesForm: 214538 },
+                { state: 'Bahia', type: 'Mixed', prod25: 3504, prod26: 3752, yield25: 24.8, yield26: 26.1, treesProd: 199235, treesForm: 46541 },
+                { state: 'Rondônia', type: 'Conilon', prod25: 2355, prod26: 2783, yield25: 56.9, yield26: 63.6, treesProd: 142450, treesForm: 24622 },
+            ];
 
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-4 border border-slate-200 shadow-xl rounded-xl">
-          <p className="font-bold text-slate-800 mb-2 border-b pb-1">{label}</p>
-          {payload.map((entry, index) => (
-            <div key={index} className="flex justify-between gap-4 text-sm py-0.5">
-              <span style={{ color: entry.color }} className="font-medium">{entry.name}:</span>
-              <span className="font-bold text-slate-700">
-                {entry.value.toLocaleString()} {
-                  entry.name.includes('Price') || entry.name.includes('Spread') ? 'c/lb' : 
-                  entry.name.includes('Yield') ? 'sc/ha' : 
-                  entry.name.includes('Ratio') ? '%' : 
-                  entry.name.includes('Area') ? 'k ha' : 'M Bags'
+            const supplyPulse = [
+                { month: 'Apr', arabica: 2, conilon: 15 },
+                { month: 'May', arabica: 10, conilon: 35 },
+                { month: 'Jun', arabica: 25, conilon: 30 },
+                { month: 'Jul', arabica: 35, conilon: 15 },
+                { month: 'Aug', arabica: 20, conilon: 4 },
+                { month: 'Sep', arabica: 8, conilon: 1 },
+            ];
+
+            // Robust Icon implementation to prevent React DOM mismatch errors
+            const Icon = ({ name, className = "" }) => {
+                const iconRef = React.useRef(null);
+                
+                React.useEffect(() => {
+                    if (iconRef.current && window.lucide) {
+                        iconRef.current.innerHTML = ''; // Clear previous
+                        const i = document.createElement('i');
+                        i.setAttribute('data-lucide', name.toLowerCase().replace(/([a-z])([A-Z])/g, '$1-$2'));
+                        if (className) i.setAttribute('class', className);
+                        iconRef.current.appendChild(i);
+                        window.lucide.createIcons({
+                            root: iconRef.current
+                        });
+                    }
+                }, [name, className]);
+                
+                return <span ref={iconRef} className="inline-flex items-center justify-center h-min w-min"></span>;
+            };
+
+            const CustomTooltip = ({ active, payload, label }) => {
+                if (active && payload && payload.length) {
+                    return (
+                        <div className="bg-white p-4 border border-slate-200 shadow-xl rounded-xl text-xs">
+                            <p className="font-bold text-slate-800 mb-2 border-b pb-1">{label}</p>
+                            {payload.map((entry, index) => (
+                                <div key={index} className="flex justify-between gap-4 py-0.5">
+                                    <span style={{ color: entry.color }} className="font-medium">{entry.name}:</span>
+                                    <span className="font-bold text-slate-700">
+                                        {entry.value.toLocaleString()} {
+                                            entry.name.includes('Price') || entry.name.includes('Spread') ? 'c/lb' : 
+                                            entry.name.includes('Yield') ? 'sc/ha' : 
+                                            entry.name.includes('Ratio') ? '%' : 
+                                            entry.name.includes('Area') ? 'k ha' : 'M Bags'
+                                        }
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    );
                 }
-              </span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
+                return null;
+            };
 
-  return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-900">
-      <div className="max-w-7xl mx-auto space-y-6">
-        
-        {/* Header Section */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div>
-            <div className="flex items-center gap-2 text-amber-600 font-bold text-xs uppercase tracking-widest mb-1">
-              <Database size={14} /> Full CONAB Dataset + Global Strategy Model
-            </div>
-            <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
-              <Coffee className="text-amber-700 h-8 w-8" />
-              Coffee Market Intelligence 2026
-            </h1>
-            <p className="text-slate-500 mt-1 italic">Decoding Brazil's Record Harvest and Global Price Convergence</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { id: 'state-analysis', label: 'State Analysis', icon: <MapIcon size={14}/> },
-              { id: 'agricultural-assets', label: 'Assets & Trees', icon: <Layers size={14}/> },
-              { id: 'global-macro', label: 'Global & Vietnam', icon: <Globe size={14}/> },
-              { id: 'market-pulse', label: 'Supply Pulse', icon: <Ship size={14}/> },
-              { id: 'risk-price', label: 'Price & Risk', icon: <Activity size={14}/> }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                  activeTab === tab.id 
-                  ? 'bg-amber-800 text-white shadow-md' 
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-                }`}
-              >
-                {tab.icon} {tab.label}
-              </button>
-            ))}
-          </div>
-        </header>
+            if (!LineChart) return <div className="p-10 text-center">Loading Data Visualisation Libraries...</div>;
 
-        {/* TAB 1: State Analysis (CONAB Regional Production) */}
-        {activeTab === 'state-analysis' && (
-          <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <p className="text-slate-500 text-xs font-bold uppercase mb-1">Total Brazil 2026</p>
-                <div className="text-2xl font-bold text-slate-800">66.2M <span className="text-xs text-slate-400">Bags</span></div>
-                <div className="text-xs text-emerald-600 font-bold mt-1">+17.1% YoY Recovery</div>
-              </div>
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <p className="text-slate-500 text-xs font-bold uppercase mb-1">Arabica Forecast</p>
-                <div className="text-2xl font-bold text-slate-800">46.5M <span className="text-xs text-slate-400">Bags</span></div>
-                <div className="text-xs text-emerald-600 font-bold mt-1">Positive Biennial Engine</div>
-              </div>
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <p className="text-slate-500 text-xs font-bold uppercase mb-1">Conilon Forecast</p>
-                <div className="text-2xl font-bold text-slate-800">19.7M <span className="text-xs text-slate-400">Bags</span></div>
-                <div className="text-xs text-amber-600 font-bold mt-1">Record Yield Potential</div>
-              </div>
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <p className="text-slate-500 text-xs font-bold uppercase mb-1">Avg. Yield</p>
-                <div className="text-2xl font-bold text-slate-800">34.7 <span className="text-xs text-slate-400">sc/ha</span></div>
-                <div className="text-xs text-blue-600 font-bold mt-1">Historical Peak Survey</div>
-              </div>
-            </div>
+            return (
+                <div className="min-h-screen p-4 md:p-8 bg-slate-50">
+                    <div className="max-w-7xl mx-auto space-y-6">
+                        {/* Header */}
+                        <header className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-center gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="bg-amber-100 p-3 rounded-xl">
+                                    <Icon name="Coffee" className="text-amber-700 w-8 h-8" />
+                                </div>
+                                <div>
+                                    <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+                                        Coffee Market Intelligence 2026
+                                    </h1>
+                                    <p className="text-slate-500 text-sm">CONAB Analysis & Global Strategy Forecast</p>
+                                </div>
+                            </div>
+                            <div className="flex flex-wrap justify-center gap-2">
+                                {[
+                                    { id: 'state-analysis', label: 'State Data', icon: 'Map' },
+                                    { id: 'agricultural-assets', label: 'Assets', icon: 'Layers' },
+                                    { id: 'global-macro', label: 'Global', icon: 'Globe' },
+                                    { id: 'market-pulse', label: 'Supply Pulse', icon: 'Ship' },
+                                    { id: 'risk-price', label: 'Risk & Price', icon: 'Activity' }
+                                ].map(tab => (
+                                    <button 
+                                        key={tab.id} 
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                                            activeTab === tab.id 
+                                            ? 'bg-amber-800 text-white shadow-lg scale-105' 
+                                            : 'bg-white border text-slate-600 hover:bg-slate-50'
+                                        }`}
+                                    >
+                                        <Icon name={tab.icon} className="w-3 h-3" />
+                                        {tab.label.toUpperCase()}
+                                    </button>
+                                ))}
+                            </div>
+                        </header>
 
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-              <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                <LucideBarChart size={20} className="text-emerald-600" />
-                Regional Production Recovery: 2025 vs 2026
-              </h3>
-              <div className="h-96">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={brazilRegionalStats} layout="vertical" margin={{ left: 30 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                    <XAxis type="number" hide />
-                    <YAxis dataKey="state" type="category" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} width={120} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                    <Bar dataKey="prod25" name="2025 Harvest" fill="#cbd5e1" radius={[0, 4, 4, 0]} barSize={20} />
-                    <Bar dataKey="prod26" name="2026 Forecast" fill="#059669" radius={[0, 4, 4, 0]} barSize={20} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="mt-4 p-4 bg-slate-50 rounded-lg">
-                <p className="text-sm text-slate-600 italic">
-                  <strong>Key Insight:</strong> Minas Gerais is adding over 6 million bags in a single year, providing the critical volume needed to keep NY futures from returning to the $4.00/lb highs seen in late 2025.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+                        {/* Main Content Area */}
+                        <div className="bg-white p-4 md:p-8 rounded-2xl shadow-sm border border-slate-200 min-h-[500px]">
+                            {activeTab === 'state-analysis' && (
+                                <div className="space-y-6 animate-in fade-in duration-500 tab-content">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-lg font-bold text-slate-800">Brazil Regional Production: 2025 vs 2026</h3>
+                                        <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">+17.1% National Growth</span>
+                                    </div>
+                                    <div className="h-[400px]">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={brazilRegionalStats} layout="vertical" margin={{ left: 40, right: 40 }}>
+                                                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
+                                                <XAxis type="number" hide />
+                                                <YAxis dataKey="state" type="category" width={120} tick={{fontSize: 11, fontWeight: 600}} axisLine={false} tickLine={false} />
+                                                <Tooltip content={<CustomTooltip />} cursor={{fill: '#f8fafc'}} />
+                                                <Legend iconType="circle" wrapperStyle={{paddingTop: '20px'}} />
+                                                <Bar dataKey="prod25" name="2025 Harvest (k bags)" fill="#94a3b8" barSize={14} radius={[0, 4, 4, 0]} isAnimationActive={false} />
+                                                <Bar dataKey="prod26" name="2026 Forecast (k bags)" fill="#059669" barSize={14} radius={[0, 4, 4, 0]} isAnimationActive={false} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-600 bg-slate-50 p-4 rounded-xl">
+                                        <p><strong>Minas Gerais:</strong> Leading recovery with +22% growth, adding ~6.2M bags.</p>
+                                        <p><strong>Rondônia:</strong> Maintaining highest Conilon efficiency at 63.6 sc/ha.</p>
+                                    </div>
+                                </div>
+                            )}
 
-        {/* TAB 2: Agricultural Assets (Trees & Area) */}
-        {activeTab === 'agricultural-assets' && (
-          <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Tree Lifecycle Chart */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                  <Leaf size={18} className="text-emerald-500" />
-                  Parque Cafeeiro: Trees in Production vs. Formation (mil covas)
-                </h3>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={brazilRegionalStats}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="state" tick={{fontSize: 10}} />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="treesProd" name="Trees in Production" stackId="a" fill="#1e293b" />
-                      <Bar dataKey="treesForm" name="Trees in Formation" stackId="a" fill="#f59e0b" />
-                    </BarChart>
-                  </ResponsiveContainer>
+                            {activeTab === 'global-macro' && (
+                                <div className="space-y-6 animate-in fade-in duration-500 tab-content">
+                                    <h3 className="text-lg font-bold text-slate-800">Supply-Demand Duopoly (M Bags)</h3>
+                                    <div className="h-[400px]">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <ComposedChart data={globalMarketData}>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                <XAxis dataKey="year" tick={{fontSize: 11}} axisLine={false} />
+                                                <YAxis tick={{fontSize: 11}} axisLine={false} />
+                                                <Tooltip content={<CustomTooltip />} />
+                                                <Legend verticalAlign="top" height={36}/>
+                                                <Bar dataKey="brazil" name="Brazil Production" fill="#15803d" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                                                <Bar dataKey="vietnam" name="Vietnam Production" fill="#dc2626" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                                                <Line type="monotone" dataKey="worldDemand" name="Global Consumption" stroke="#475569" strokeWidth={3} dot={{r: 4, fill: '#475569'}} isAnimationActive={false} />
+                                            </ComposedChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-900 italic">
+                                        "The 2026 surplus is marginal (+0.6M). Vietnam's flatline at 26M bags due to heat stress remains the primary risk for Robusta buyers."
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'market-pulse' && (
+                                <div className="space-y-6 animate-in slide-in-from-right duration-500 tab-content">
+                                    <h3 className="text-lg font-bold text-slate-800">Monthly Harvest Supply Pulse</h3>
+                                    <div className="h-[400px]">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart data={supplyPulse}>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                <XAxis dataKey="month" tick={{fontSize: 11}} />
+                                                <YAxis tick={{fontSize: 11}} />
+                                                <Tooltip />
+                                                <Legend />
+                                                <Area type="monotone" dataKey="arabica" name="Arabica %" fill="#94a3b8" stroke="#475569" stackId="1" fillOpacity={0.6} isAnimationActive={false} />
+                                                <Area type="monotone" dataKey="conilon" name="Conilon %" fill="#fbbf24" stroke="#b45309" stackId="1" fillOpacity={0.6} isAnimationActive={false} />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    <div className="text-center bg-slate-900 text-white py-3 rounded-lg text-xs font-bold uppercase tracking-widest">
+                                        Peak Port Liquidity Windows: JUNE — JULY 2026
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'risk-price' && (
+                                <div className="space-y-6 animate-in zoom-in duration-500 tab-content">
+                                    <h3 className="text-lg font-bold text-slate-800">Stock-to-Use Ratio vs Price Volatility</h3>
+                                    <div className="h-[400px]">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <ComposedChart data={globalMarketData}>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                <XAxis dataKey="year" tick={{fontSize: 11}} />
+                                                <YAxis yAxisId="left" tick={{fontSize: 11}} label={{ value: 'Price (c/lb)', angle: -90, position: 'insideLeft', fontSize: 10 }} />
+                                                <YAxis yAxisId="right" orientation="right" domain={[0, 40]} tick={{fontSize: 11}} label={{ value: 'Ratio (%)', angle: 90, position: 'insideRight', fontSize: 10 }} />
+                                                <Tooltip content={<CustomTooltip />} />
+                                                <Legend />
+                                                <Line yAxisId="right" type="monotone" dataKey="ratio" name="Stock-to-Use Ratio (%)" stroke="#ef4444" strokeWidth={4} dot={{r: 6}} isAnimationActive={false} />
+                                                <Bar yAxisId="left" dataKey="arabicaPrice" name="Arabica NY Index" fill="#cbd5e1" opacity={0.4} isAnimationActive={false} />
+                                                <ReferenceLine yAxisId="right" y={15} stroke="#ef4444" strokeDasharray="5 5" label={{value: 'Danger Zone', position: 'top', fill: '#ef4444', fontSize: 10}} />
+                                            </ComposedChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'agricultural-assets' && (
+                                <div className="space-y-6 animate-in fade-in duration-500 tab-content">
+                                    <h3 className="text-lg font-bold text-slate-800">Parque Cafeeiro: Investment Cycle</h3>
+                                    <div className="h-[400px]">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={brazilRegionalStats} margin={{bottom: 20}}>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                <XAxis dataKey="state" tick={{fontSize: 11}} axisLine={false} />
+                                                <YAxis tick={{fontSize: 11}} axisLine={false} />
+                                                <Tooltip />
+                                                <Legend verticalAlign="top" height={36} />
+                                                <Bar dataKey="treesProd" name="Trees in Production" stackId="a" fill="#1e293b" isAnimationActive={false} />
+                                                <Bar dataKey="treesForm" name="Trees in Formation" stackId="a" fill="#f59e0b" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    <p className="text-xs text-slate-500 italic text-center">Trees in "Formation" indicate capacity expansion for the 2027-2029 cycles.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Analysis Footer */}
+                        <footer className="bg-slate-800 text-white p-6 md:p-8 rounded-2xl grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div className="space-y-2">
+                                <h4 className="font-bold text-amber-400 text-sm uppercase tracking-wider">Supply Outlook</h4>
+                                <p className="text-xs text-slate-300 leading-relaxed">Brazil's record 2026 recovery (+17%) provides the first global liquidity buffer in 4 years. Expect short-term price pressure in Q3.</p>
+                            </div>
+                            <div className="space-y-2 border-l border-slate-700 pl-8">
+                                <h4 className="font-bold text-amber-400 text-sm uppercase tracking-wider">Price Resistance</h4>
+                                <p className="text-xs text-slate-300 leading-relaxed">Global stocks remain at 15-year lows (ratio &lt; 16%). This prevents a price crash, maintaining a structural floor at 310c (NY).</p>
+                            </div>
+                            <div className="space-y-2 border-l border-slate-700 pl-8">
+                                <h4 className="font-bold text-amber-400 text-sm uppercase tracking-wider">Vietnam Delta</h4>
+                                <p className="text-sm font-bold">2030 Structural Deficit: -6.4M Bags</p>
+                                <p className="text-xs text-slate-400">Consumption CAGR (+2.1%) outpaces production growth through 2030.</p>
+                            </div>
+                        </footer>
+                    </div>
                 </div>
-                <div className="mt-4 text-xs text-slate-500 italic">
-                  High "Formation" counts in Espírito Santo and São Paulo indicate aggressive replanting cycles that will hit peak yield by 2028.
-                </div>
-              </div>
+            );
+        };
 
-              {/* Productivity Alpha Chart */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                  <Zap size={18} className="text-blue-500" />
-                  Productivity Alpha: Yield Gap by State (sc/ha)
-                </h3>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={brazilRegionalStats}>
-                      <XAxis dataKey="state" tick={{fontSize: 10}} />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="yield26" name="2026 Yield" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                      <Line type="monotone" dataKey="yield25" name="2025 Yield" stroke="#ef4444" strokeWidth={2} dot={{ r: 4 }} />
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="mt-4 p-3 bg-blue-50 text-blue-800 rounded text-xs font-bold uppercase text-center">
-                  Rondônia Outperformance: 63.6 sc/ha (Clonal Tech Leader)
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 3: Global Macro & Vietnam Focus */}
-        {activeTab === 'global-macro' && (
-          <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-              <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                <Globe size={22} className="text-blue-500" />
-                The Global Duopoly: Brazil vs. Vietnam (M Bags)
-              </h3>
-              <div className="h-96">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={globalMarketData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="year" />
-                    <YAxis yAxisId="left" orientation="left" stroke="#64748b" />
-                    <YAxis yAxisId="right" orientation="right" stroke="#ef4444" />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                    <Bar yAxisId="left" dataKey="brazil" name="Brazil Production" fill="#15803d" barSize={30} />
-                    <Bar yAxisId="left" dataKey="vietnam" name="Vietnam Production" fill="#dc2626" barSize={30} />
-                    <Line yAxisId="right" type="monotone" dataKey="worldDemand" name="Global Consumption" stroke="#ef4444" strokeWidth={3} />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="mt-6 p-6 bg-slate-900 text-white rounded-xl">
-                <h4 className="font-bold text-amber-400 mb-2">The 2026 Market Pivot:</h4>
-                <p className="text-sm text-slate-300 leading-relaxed">
-                  Vietnam's production is stagnating at **26M bags** due to chronic heat in the Central Highlands. Brazil is the only player with the agricultural flexibility to respond to the **184M bag** global demand. This shifts the market's center of gravity entirely toward the Santos and Vitória ports.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 4: Market Pulse (Supply Pulse & Spread) */}
-        {activeTab === 'market-pulse' && (
-          <div className="space-y-6 animate-in slide-in-from-right duration-500">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Substitution Spread Chart */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                  <TrendingUp size={18} className="text-amber-700" />
-                  The Arbitrage Spread: NY vs. London (c/lb)
-                </h3>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={globalMarketData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="year" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="spread" name="Arabica Premium over Robusta" stroke="#b45309" strokeWidth={3} dot={{ r: 5 }} />
-                      <ReferenceLine y={100} stroke="#ef4444" strokeDasharray="3 3" label={{ value: 'Blend Switch Trigger', fill: '#ef4444', fontSize: 10 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-                <p className="text-xs text-slate-500 mt-2">
-                  As the spread narrows toward 100c, the incentive for roasters to switch from expensive Arabica to high-quality Brazilian Conilon reaches a critical mass.
-                </p>
-              </div>
-
-              {/* Harvest Schedule Area Chart */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                  <Calendar size={18} className="text-slate-400" />
-                  Monthly Harvest Pulse: Supply Pressure Schedule
-                </h3>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={supplyPulse}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Area type="monotone" dataKey="arabica" name="Arabica %" fill="#94a3b8" stroke="#475569" stackId="1" />
-                      <Area type="monotone" dataKey="conilon" name="Conilon %" fill="#fcd34d" stroke="#b45309" stackId="1" />
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded text-center text-[10px] font-bold uppercase tracking-widest text-slate-600">
-                  Peak Liquidity Phase: JUNE / JULY 2026
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 5: Price & Risk Metrics */}
-        {activeTab === 'risk-price' && (
-          <div className="space-y-6 animate-in zoom-in duration-300">
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-              <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                <AlertCircle size={22} className="text-rose-500" />
-                Stock-to-Use "Danger Zone" & Price Correlation
-              </h3>
-              <div className="h-96">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={globalMarketData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="year" />
-                    <YAxis yAxisId="left" />
-                    <YAxis yAxisId="right" orientation="right" domain={[0, 40]} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                    <Line yAxisId="right" type="monotone" dataKey="ratio" name="Stock-to-Use Ratio (%)" stroke="#ef4444" strokeWidth={4} />
-                    <Bar yAxisId="left" dataKey="arabicaPrice" name="Arabica NY Index" fill="#cbd5e1" opacity={0.3} />
-                    <ReferenceLine yAxisId="right" y={15} stroke="#ef4444" strokeDasharray="3 3" />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="mt-8 p-6 bg-slate-900 text-white rounded-2xl border-t-4 border-amber-600">
-                <h4 className="font-bold text-amber-400 mb-2 italic">The 2030 Analyst Forecast:</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm text-slate-300">
-                  <p>
-                    <strong>Supply side:</strong> Even with record crops, the Stock-to-Use ratio is trending toward <strong>11.1%</strong> by 2030. This level of inventory "thinness" means that any frost event in Brazil or port strike in Vietnam will create exponential price spikes.
-                  </p>
-                  <p>
-                    <strong>Price Floor:</strong> We expect a firm support base at <strong>310c (NY)</strong> and <strong>210c (London)</strong>. The era of cheap coffee (\$1.50) is structurally impossible given rising consumption in China and heat stress in Southeast Asia.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Dynamic Footer */}
-        <footer className="bg-slate-800 text-white p-8 rounded-2xl shadow-lg">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
-            <div className="space-y-2">
-              <h4 className="font-bold text-amber-400">Minas Gerais Recovery</h4>
-              <p className="text-slate-300">Jump to 34.1M bags provides the world's primary liquidity buffer for the next 18 months.</p>
-            </div>
-            <div className="space-y-2 border-l border-slate-700 pl-8">
-              <h4 className="font-bold text-amber-400">Inventory Scarcity</h4>
-              <p className="text-slate-300">The 2026 surplus (+0.6M) is too small to rebuild the 22M bag deficit accumulated since 2021.</p>
-            </div>
-            <div className="space-y-2 border-l border-slate-700 pl-8">
-              <h4 className="font-bold text-amber-400">Vietnam Displacement</h4>
-              <p className="text-slate-300">Brazil's Conilon is now a structural replacement for Vietnamese Robusta due to climate resilience.</p>
-            </div>
-          </div>
-        </footer>
-
-      </div>
-    </div>
-  );
-};
-
-export default function App() {
-  return <CoffeeDashboard />;
-}
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
